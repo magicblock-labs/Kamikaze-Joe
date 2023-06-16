@@ -1,0 +1,19 @@
+[features]
+seeds = false
+skip-lint = false
+
+[programs.localnet]
+chainstrike = "F91oPUhkygpaR4KAazG1mXhQ6yYavh6LbQq46r2LKM6b"
+
+[programs.devnet]
+chainstrike = "F91oPUhkygpaR4KAazG1mXhQ6yYavh6LbQq46r2LKM6b"
+
+[registry]
+url = "https://api.apr.dev"
+
+[provider]
+cluster = "devnet"
+wallet = "/Users/gabrielepicco/.config/solana/id.json"
+
+[scripts]
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/*"
