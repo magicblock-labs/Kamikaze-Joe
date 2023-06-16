@@ -40,9 +40,9 @@ async function InitializeGame(program: Program<Chainstrike>, player: anchor.web3
         .signers([player]).rpc()
 }
 
-async function JoinGame(program: Program<Chainstrike>, player2: anchor.web3.Keypair, user2Pda: PublicKey, gamePda: PublicKey) {
+async function JoinGame(program: Program<Chainstrike>, player2: anchor.web3.Keypair, user2Pda: PublicKey, gamePda: PublicKey, x= 0, y = 0) {
     return await program.methods
-        .joinGame(5, 5)
+        .joinGame(x, y)
         .accounts({
             player: player2.publicKey,
             user: user2Pda,
@@ -184,25 +184,86 @@ describe("chainstrike", () => {
         console.log("Make move up signature", tx);
         await provider.connection.confirmTransaction(tx, "confirmed");
 
-        // // Make a move right
-        // tx = await program.methods
-        //     .makeMove({right:{}}, 2)
-        //     .accounts({
-        //         player: player.publicKey,
-        //         game: gamePda,
-        //     }).signers([player]).rpc();
-        // console.log("Make move rx signature", tx);
-        // await provider.connection.confirmTransaction(tx, "confirmed");
-        //
-        // // Make a move right
-        // tx = await program.methods
-        //     .makeMove({up:{}}, 4)
-        //     .accounts({
-        //         player: player.publicKey,
-        //         game: gamePda,
-        //     }).signers([player]).rpc();
-        // console.log("Make move up signature", tx);
-        // await provider.connection.confirmTransaction(tx, "confirmed");
+        // Make a move right
+        tx = await program.methods
+            .makeMove({right:{}}, 2)
+            .accounts({
+                player: player.publicKey,
+                game: gamePda,
+            }).signers([player]).rpc();
+        console.log("Make move rx signature", tx);
+        await provider.connection.confirmTransaction(tx, "confirmed");
+
+        // Make a move right
+        tx = await program.methods
+            .makeMove({up:{}}, 4)
+            .accounts({
+                player: player.publicKey,
+                game: gamePda,
+            }).signers([player]).rpc();
+        console.log("Make move up signature", tx);
+        await provider.connection.confirmTransaction(tx, "confirmed");
 
     });
+
+    it("Create and Join and Explode", async () => {
+
+        const provider = anchor.AnchorProvider.env();
+        let player = await new_funded_address(provider);
+
+        let userPda = FindUserPda(player.publicKey, program);
+
+        // Initialize User.
+        let tx = await InitializeUser(program, player, userPda);
+        console.log("Init User signature", tx);
+        await provider.connection.confirmTransaction(tx, "confirmed");
+
+        let id = new BN(0);
+        let gamePda = FindGamePda(userPda, id, program);
+
+        // Initialize Game.
+        tx = await InitializeGame(program, player, userPda, gamePda);
+        console.log("Create Game signature", tx);
+        await provider.connection.confirmTransaction(tx, "confirmed");
+
+        // Join the game
+        tx = await JoinGame(program, player, userPda, gamePda, 2,2);
+
+        console.log("Join Game signature", tx);
+        await provider.connection.confirmTransaction(tx, "confirmed");
+
+        // Join the game with a second player
+        let player2 = await new_funded_address(provider);
+        let user2Pda = FindUserPda(player2.publicKey, program);
+        tx = await InitializeUser(program, player2, user2Pda);
+        console.log("Init User 2 signature", tx);
+        await provider.connection.confirmTransaction(tx, "confirmed");
+
+        tx = await JoinGame(program, player2, user2Pda, gamePda, 2, 3);
+        console.log("Join 2 Game signature", tx);
+        await provider.connection.confirmTransaction(tx, "confirmed");
+
+        // Join the game with a third player
+        let player3 = await new_funded_address(provider);
+        let user3Pda = FindUserPda(player3.publicKey, program);
+        tx = await InitializeUser(program, player3, user3Pda);
+        console.log("Init User 3 signature", tx);
+        await provider.connection.confirmTransaction(tx, "confirmed");
+
+        tx = await JoinGame(program, player3, user3Pda, gamePda, 27, 27);
+        console.log("Join 3 Game signature", tx);
+        await provider.connection.confirmTransaction(tx, "confirmed");
+
+        // Explode transaction
+        tx = await program.methods
+            .explode()
+            .accounts({
+                player: player.publicKey,
+                game: gamePda,
+            }).signers([player]).rpc();
+
+        console.log("Explode signature", tx);
+        await provider.connection.confirmTransaction(tx, "confirmed");
+    });
+
 });

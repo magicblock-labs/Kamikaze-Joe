@@ -1,5 +1,6 @@
 use anchor_lang::prelude::*;
 use crate::Cell::Block;
+use crate::Cell::Recharge;
 
 #[account]
 #[derive(InitSpace, Debug, Default)]
@@ -20,7 +21,12 @@ impl Game {
     }
 
     pub fn is_cell_valid(&self, x: usize, y: usize) -> bool {
-        return x < self.width() && y < self.height() && self.grid.cells[x][y] == Cell::Empty;
+        return x < self.width() && y < self.height() && (
+            self.grid.cells[x][y] == Cell::Empty || self.grid.cells[x][y] == Cell::Recharge);
+    }
+
+    pub fn is_recharge(&self, x: usize, y: usize) -> bool {
+        return self.grid.cells[x][y] == Cell::Recharge
     }
 
     pub fn is_game_active(&self) -> bool {
@@ -63,10 +69,18 @@ impl Default for Grid {
         let row = &mut grid.cells[10];
         row.iter_mut().skip(5).take(5).for_each(|cell| *cell = Block);
 
+        let cells_to_set = &[(4, 5), (5, 5), (6, 5), (7, 5)];
+        for &(x, y) in cells_to_set {
+            grid.cells[x][y] = Block;
+        }
+
         grid.cells[3][3] = Block;
         grid.cells[27][23] = Block;
         grid.cells[0][13] = Block;
         grid.cells[24][4] = Block;
+
+        grid.cells[1][14] = Recharge;
+        grid.cells[27][14] = Recharge;
 
         grid
     }
@@ -77,7 +91,7 @@ impl Default for Grid {
 pub enum Cell {
     Empty,
     Block,
-    Teleport,
+    Recharge,
 }
 
 impl Default for Cell {

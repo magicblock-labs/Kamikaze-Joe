@@ -29,6 +29,10 @@ pub mod chainstrike {
     pub fn make_move(ctx: Context<MakeMove>, direction: Facing, energy: u8) -> Result<()> {
         make_move::handler(ctx, direction, energy)
     }
+
+    pub fn explode(ctx: Context<Explode>) -> Result<()> {
+        explode::handler(ctx)
+    }
 }
 
 #[derive(Accounts)]
@@ -66,6 +70,14 @@ pub struct JoinGame<'info> {
 
 #[derive(Accounts)]
 pub struct MakeMove<'info> {
+    #[account(mut)]
+    pub player: Signer<'info>,
+    #[account(mut)]
+    pub game: Account<'info, Game>,
+}
+
+#[derive(Accounts)]
+pub struct Explode<'info> {
     #[account(mut)]
     pub player: Signer<'info>,
     #[account(mut)]

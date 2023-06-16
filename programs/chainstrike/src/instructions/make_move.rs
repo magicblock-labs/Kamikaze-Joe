@@ -30,7 +30,7 @@ pub fn handler(
         return Err(ChainstrikeError::PlayerNotFound.into());
     }
 
-    // Check if game_state is waiting
+    // Check if energy is valid
     if energy > 5 {
         return Err(ChainstrikeError::NotValidEnergy.into());
     }
@@ -82,6 +82,9 @@ fn move_player(game: &mut Account<Game>, player_index: usize, direction: Facing,
             final_x = x;
             final_y = y;
             is_valid = true;
+            if game.is_recharge(x as usize, y as usize){
+                game.players[player_index].energy = 100;
+            }
         }else {
             break;
         }
