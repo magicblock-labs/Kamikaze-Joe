@@ -95,7 +95,12 @@ fn move_player(game: &mut Account<Game>, player_index: usize, direction: Facing,
     game.players[player_index].x = final_x;
     game.players[player_index].y = final_y;
     game.players[player_index].facing = direction;
-    game.players[player_index].energy -= energy;
+
+    if energy > game.players[player_index].energy {
+        game.players[player_index].energy = 0;
+    }else {
+        game.players[player_index].energy = game.players[player_index].energy - energy
+    }
 
     msg!(&format!("Moved to {final_x}, {final_y}"));
 

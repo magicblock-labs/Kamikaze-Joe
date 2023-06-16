@@ -9,7 +9,7 @@ pub struct Game {
     pub grid: Grid,
     pub game_state: GameState,
 
-    #[max_len(4)]
+    #[max_len(10)]
     pub players: Vec<Player>,
 }
 
@@ -62,7 +62,11 @@ impl Default for Grid {
 
         let row = &mut grid.cells[10];
         row.iter_mut().skip(5).take(5).for_each(|cell| *cell = Block);
+
         grid.cells[3][3] = Block;
+        grid.cells[27][23] = Block;
+        grid.cells[0][13] = Block;
+        grid.cells[24][4] = Block;
 
         grid
     }
