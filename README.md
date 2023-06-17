@@ -4,9 +4,8 @@ Kamikaze Joe is a fully on-chain tactical PvP arena game. Players compete agains
 This repository contains the necessary code and assets to run the game, which includes both the on-chain state and logic, and a Unity client used for rendering.
 
 # :gear: Game Mechanics 
-In Kamikaze Joe, players find themselves in an arena where they must strategically outmaneuver their opponents. Every Agent starts with 100 energy. Players can select a range from 1 to 5 and move across the board, consuming the corresponding amount of energy. The chosen energy expenditure determines the number of squares the player will move, provided there are no obstacles in the way. Strategic decision-making is key, as players must balance the need for speed and positioning with the limited energy available
-The game map features Rechargers scattered throughout. By reaching Rechargers, players replenish their energy reserves, enabling them to make additional moves. 
-When they feel they are close enough to their opponents, agents can active their bomb to instantly kill the opponent. Bomb autoinflict 20 damage to energy. Bombs have a 1 square range around you.  
+In Kamikaze Joe, players find themselves in an arena where they must strategically outmaneuver their opponents. Every Agent starts with 100 energy. Players can select a range from 1 to 5 and move across the board, consuming the corresponding amount of energy. The chosen energy expenditure determines the number of squares the player will move, provided there are no obstacles in the way. Strategic decision-making is key, as players must balance the need for speed and positioning with the limited energy available. The game map features Rechargers scattered throughout. By reaching Rechargers, players replenish their energy reserves, enabling them to make additional moves. 
+When they feel they are close enough to their opponents, agents can activate their bomb to instantly kill the opponent. Bomb autoinflict 20 damage to energy. Bombs have a 1 square range around you.  
 
 The last Agent standing wins the game. 
 
