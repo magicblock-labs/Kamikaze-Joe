@@ -1,4 +1,4 @@
-# :💥 Kamikaze Joe 
+# 💥 Kamikaze Joe 
 Kamikaze Joe is a fully on-chain PvP arena game. Players compete against each other in the vest of elite kamikaze agents, willing to blow themselves up to kill their governments' enemy.
 This repository contains the necessary code and assets to run the game, which includes both the state and logic on-chain, as well as a Unity client used for engine rendering.
 
@@ -21,7 +21,7 @@ The repository includes the following components:
 
 - Unity Client: Contains the Unity project that serves as the game engine and handles the rendering of the game world. The Unity client interacts with the program deployed on the blockchain, allowing players to see the game state in real-time and make moves accordingly.
 
-# 💣: How to play
+# 💣 How to play
 
 - 1 to 5 to select energy level
 - WASD to move
