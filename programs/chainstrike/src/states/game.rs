@@ -74,13 +74,25 @@ impl Default for Grid {
             grid.cells[x][y] = Block;
         }
 
+        let cells_to_set = &[(4, 23), (5, 23), (6, 23), (7, 23)];
+        for &(x, y) in cells_to_set {
+            grid.cells[x][y] = Block;
+        }
+
+        let cells_to_set = &[(13, 13), (14, 13), (15, 13), (16, 13)];
+        for &(x, y) in cells_to_set {
+            grid.cells[x][y] = Block;
+        }
+
         grid.cells[3][3] = Block;
-        grid.cells[27][23] = Block;
+        grid.cells[24][23] = Block;
+        grid.cells[24][22] = Block;
+
         grid.cells[0][13] = Block;
         grid.cells[24][4] = Block;
 
         grid.cells[1][14] = Recharge;
-        grid.cells[27][14] = Recharge;
+        grid.cells[26][14] = Recharge;
 
         grid
     }

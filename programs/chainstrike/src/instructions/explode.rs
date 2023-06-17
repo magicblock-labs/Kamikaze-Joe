@@ -43,7 +43,11 @@ fn explode(game: &mut Account<Game>, player_index: usize) -> Result<()>  {
         (x + 1, y),
         (x - 1, y),
         (x, y + 1),
-        (x, y - 1)
+        (x, y - 1),
+        (x + 1, y + 1),
+        (x - 1, y - 1),
+        (x - 1, y + 1),
+        (x + 1, y - 1),
     ];
 
     for c in cells_to_check {
