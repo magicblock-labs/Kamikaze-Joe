@@ -1,16 +1,14 @@
 # 💥 Kamikaze Joe 
-Kamikaze Joe is a fully on-chain PvP arena game. Players compete against each other as elite kamikaze agents, willing to blow themselves up to kill their governments' enemy. Carefully manage your energy, rapidly evaluate your opponents moves and decide when to active your bomb to kill everyone around you. 
+Kamikaze Joe is a fully on-chain tactical PvP arena game. Players compete against each other as elite kamikaze agents, members of shadowy organizations willing to blow themselves up to kill their governments' enemy. Carefully manage your energy, evaluate your opponent's moves and decide when to commit the ultimate sacrifice to kill everyone around you.
 
-This repository contains the necessary code and assets to run the game, which includes both the state and logic on-chain, as well as a Unity client used for engine rendering.
+This repository contains the necessary code and assets to run the game, which includes both the on-chain state and logic, and a Unity client used for rendering.
 
 # :gear: Game Mechanics 
-In Kamikaze Joe, players find themselves in an arena where they must strategically navigate and outmaneuver their opponents. The game revolves around managing energy to make movements and gain an advantage. Each movement in the game costs energy, and players can only move if they have enough energy left.
+In Kamikaze Joe, players find themselves in an arena where they must strategically outmaneuver their opponents. Every Agent starts with 100 energy. Players can select a range from 1 to 5 and move across the board, consuming the corresponding amount of energy. The chosen energy expenditure determines the number of squares the player will move, provided there are no obstacles in the way. Strategic decision-making is key, as players must balance the need for speed and positioning with the limited energy available
+The game map features Rechargers scattered throughout. By reaching Rechargers, players replenish their energy reserves, enabling them to make additional moves. 
+When they feel they are close enough to their opponents, agents can active their bomb to instantly kill the opponent. Bomb autoinflict 20 damage to energy. Bombs have a 1 square range around you.  
 
-Players must decide how much energy they want to spend on a move, selecting a value from 1 to 5. The chosen energy expenditure determines the number of squares the player will move, provided there are no obstacles in the way. Strategic decision-making is key, as players must balance the need for speed and positioning with the limited energy available
-
-The game map features chests scattered throughout, which serve as energy rechargers. By reaching and interacting with these chests, players can replenish their energy reserves, enabling them to make additional moves. 
-
-When they feel they are close enough to their opponents, agents can blow themselves up and try to kill their enemy in the ultimate sacrifice. It's crucial to plan movements and activate the bomb carefully to outlast and outwit your opponents.
+The last Agent standing wins the game. 
 
 # :wrench: Technical Details 
 
