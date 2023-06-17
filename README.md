@@ -1,4 +1,4 @@
-# :💥: Kamikaze Joe 
+# :💥 Kamikaze Joe 
 Kamikaze Joe is a fully on-chain PvP arena game. Players compete against each other in the vest of elite kamikaze agents, willing to blow themselves up to kill their governments' enemy.
 This repository contains the necessary code and assets to run the game, which includes both the state and logic on-chain, as well as a Unity client used for engine rendering.
 
