@@ -88,7 +88,7 @@ impl Default for Grid {
         grid.cells[24][23] = Block;
         grid.cells[24][22] = Block;
 
-        grid.cells[0][13] = Block;
+        grid.cells[5][13] = Block;
         grid.cells[24][4] = Block;
 
         grid.cells[1][14] = Recharge;
