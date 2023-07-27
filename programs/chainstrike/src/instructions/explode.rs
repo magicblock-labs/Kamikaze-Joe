@@ -35,6 +35,11 @@ pub fn handler(
 
 fn explode(game: &mut Account<Game>, player_index: usize) -> Result<()>  {
 
+    // Check if energy is valid
+    if game.players[player_index].energy <= 0 {
+        return Err(ChainstrikeError::NotValidEnergy.into());
+    }
+
     let x = game.players[player_index].x as i16;
     let y = game.players[player_index].y as i16;
 

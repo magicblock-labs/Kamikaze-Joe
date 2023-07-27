@@ -12,7 +12,7 @@ chainstrike = "F91oPUhkygpaR4KAazG1mXhQ6yYavh6LbQq46r2LKM6b"
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "localnet"
+cluster = "devnet"
 wallet = "/Users/gabrielepicco/.config/solana/id.json"
 
 [scripts]

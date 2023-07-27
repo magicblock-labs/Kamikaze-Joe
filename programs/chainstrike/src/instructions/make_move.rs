@@ -40,6 +40,11 @@ pub fn handler(
 
 fn move_player(game: &mut Account<Game>, player_index: usize, direction: Facing, energy: u8) -> Result<()>  {
 
+    // Check if energy is valid
+    if game.players[player_index].energy <= 0 {
+        return Err(ChainstrikeError::NotValidEnergy.into());
+    }
+
     let mut final_x = game.players[player_index].x;
     let mut final_y = game.players[player_index].y;
     let mut is_valid = false;
