@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 use crate::{Facing, Game, MakeMove};
-use crate::errors::ChainstrikeError;
+use crate::errors::KamikazeJoeError;
 
 pub fn handler(
     ctx: Context<MakeMove>,
@@ -11,7 +11,7 @@ pub fn handler(
 
     // Check if game is active
     if !ctx.accounts.game.is_game_active() {
-        return Err(ChainstrikeError::GameEnded.into());
+        return Err(KamikazeJoeError::GameEnded.into());
     }
 
     // Find player in game_account Players Vec
@@ -27,12 +27,12 @@ pub fn handler(
 
     // Check if player is found
     if !player_found {
-        return Err(ChainstrikeError::PlayerNotFound.into());
+        return Err(KamikazeJoeError::PlayerNotFound.into());
     }
 
     // Check if energy is valid
     if energy > 5 {
-        return Err(ChainstrikeError::NotValidEnergy.into());
+        return Err(KamikazeJoeError::NotValidEnergy.into());
     }
 
     return move_player(&mut ctx.accounts.game, player_index, direction, energy);
@@ -42,7 +42,7 @@ fn move_player(game: &mut Account<Game>, player_index: usize, direction: Facing,
 
     // Check if energy is valid
     if game.players[player_index].energy <= 0 {
-        return Err(ChainstrikeError::NotValidEnergy.into());
+        return Err(KamikazeJoeError::NotValidEnergy.into());
     }
 
     let mut final_x = game.players[player_index].x;
@@ -96,7 +96,7 @@ fn move_player(game: &mut Account<Game>, player_index: usize, direction: Facing,
     }
 
     if !is_valid {
-        return Err(ChainstrikeError::InvalidMovement.into());
+        return Err(KamikazeJoeError::InvalidMovement.into());
     }
 
     // Move player

@@ -1,12 +1,12 @@
 [package]
-name = "chainstrike"
+name = "kamikaze_joe"
 version = "0.1.0"
 description = "Created with Anchor"
 edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "chainstrike"
+name = "kamikaze_joe"
 
 [features]
 no-entrypoint = []
@@ -16,7 +16,7 @@ cpi = ["no-entrypoint"]
 default = []
 
 [dependencies]
-anchor-lang = "0.28.0"
+anchor-lang = { version = "0.28.0"}
 anchor-spl = "0.28.0"
 getrandom = { version = "0.2.9", features = ["custom"] }
 solana-program = "=1.14.17"

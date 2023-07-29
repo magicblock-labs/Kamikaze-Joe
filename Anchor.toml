@@ -3,10 +3,10 @@ seeds = false
 skip-lint = false
 
 [programs.localnet]
-chainstrike = "F91oPUhkygpaR4KAazG1mXhQ6yYavh6LbQq46r2LKM6b"
+kamikaze_joe = "JoeXD3mj5VXB2xKUz6jJ8D2AC72pXCydA6fnQJg2JiG"
 
 [programs.devnet]
-chainstrike = "F91oPUhkygpaR4KAazG1mXhQ6yYavh6LbQq46r2LKM6b"
+kamikaze_joe = "JoeXD3mj5VXB2xKUz6jJ8D2AC72pXCydA6fnQJg2JiG"
 
 [registry]
 url = "https://api.apr.dev"

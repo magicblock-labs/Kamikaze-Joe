@@ -17,5 +17,10 @@ pub fn handler(
     let user_account = &mut ctx.accounts.user;
     user_account.increment_games();
 
+    let matches = &mut ctx.accounts.matches;
+    if let Some(m) = matches{
+        m.register_game(game_account.key());
+    }
+
     Ok(())
 }

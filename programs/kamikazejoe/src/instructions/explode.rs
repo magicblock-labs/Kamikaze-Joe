@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
-use crate::{Game, Explode};
-use crate::errors::ChainstrikeError;
+use crate::{Game, Explode, GameState};
+use crate::errors::KamikazeJoeError;
 
 const ENERGY_TO_EXPLODE: u8 = 20;
 
@@ -11,7 +11,7 @@ pub fn handler(
 
     // Check if game is active
     if !ctx.accounts.game.is_game_active() {
-        return Err(ChainstrikeError::GameEnded.into());
+        return Err(KamikazeJoeError::GameEnded.into());
     }
 
     // Find player in game_account Players Vec
@@ -27,7 +27,7 @@ pub fn handler(
 
     // Check if player is found
     if !player_found {
-        return Err(ChainstrikeError::PlayerNotFound.into());
+        return Err(KamikazeJoeError::PlayerNotFound.into());
     }
 
     return explode(&mut ctx.accounts.game, player_index);
@@ -37,7 +37,7 @@ fn explode(game: &mut Account<Game>, player_index: usize) -> Result<()>  {
 
     // Check if energy is valid
     if game.players[player_index].energy <= 0 {
-        return Err(ChainstrikeError::NotValidEnergy.into());
+        return Err(KamikazeJoeError::NotValidEnergy.into());
     }
 
     let x = game.players[player_index].x as i16;
@@ -81,6 +81,14 @@ fn explode(game: &mut Account<Game>, player_index: usize) -> Result<()>  {
         game.players[player_index].energy = 0;
     }else {
         game.players[player_index].energy = game.players[player_index].energy - ENERGY_TO_EXPLODE
+    }
+
+    // Check if game is ended
+    if game.game_state == GameState::Active && game.players.iter().all(|player| player.energy == 0 ||
+        (player.energy > 0 && player.address == game.players[player_index].address)) {
+        game.game_state = GameState::Won {
+            winner: game.players[player_index].address,
+        };
     }
 
     Ok(())

@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 
 #[error_code]
-pub enum ChainstrikeError {
+pub enum KamikazeJoeError {
     /// Returned if it's not possible to start a new game
     #[msg("Unable to join a game that ended")]
     GameEnded,

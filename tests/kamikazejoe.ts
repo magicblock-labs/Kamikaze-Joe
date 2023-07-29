@@ -1,7 +1,7 @@
 import { PublicKey } from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
-import {AnchorProvider, Program} from "@coral-xyz/anchor";
-import {Chainstrike} from "../target/types/chainstrike";
+import {AnchorProvider, Program, web3} from "@coral-xyz/anchor";
+import {KamikazeJoe} from "../target/types/kamikaze_joe";
 import BN from "bn.js";
 
 async function new_funded_address(provider: AnchorProvider) {
@@ -16,7 +16,7 @@ async function new_funded_address(provider: AnchorProvider) {
     return player;
 }
 
-async function InitializeUser(program: Program<Chainstrike>, player: anchor.web3.Keypair, userPda: PublicKey) {
+async function InitializeUser(program: Program<KamikazeJoe>, player: anchor.web3.Keypair, userPda: PublicKey) {
     let tx = await program.methods
         .initializeUser()
         .accounts({
@@ -28,19 +28,32 @@ async function InitializeUser(program: Program<Chainstrike>, player: anchor.web3
     return tx;
 }
 
-async function InitializeGame(program: Program<Chainstrike>, player: anchor.web3.Keypair, userPda: PublicKey, gamePda: PublicKey) {
+async function InitializeMatches(program: Program<KamikazeJoe>, player: anchor.web3.Keypair, matchesPda: PublicKey) {
+    let tx = await program.methods
+        .initializeMatches()
+        .accounts({
+            payer: player.publicKey,
+            matches: matchesPda,
+            systemProgram: anchor.web3.SystemProgram.programId,
+        })
+        .signers([player]).rpc()
+    return tx;
+}
+
+async function InitializeGame(program: Program<KamikazeJoe>, player: anchor.web3.Keypair, userPda: PublicKey, gamePda: PublicKey) {
     return await program.methods
         .initializeGame()
         .accounts({
             creator: player.publicKey,
             user: userPda,
             game: gamePda,
+            matches: FindMatchesPda(program),
             systemProgram: anchor.web3.SystemProgram.programId,
         })
         .signers([player]).rpc()
 }
 
-async function JoinGame(program: Program<Chainstrike>, player2: anchor.web3.Keypair, user2Pda: PublicKey, gamePda: PublicKey, x= 0, y = 0) {
+async function JoinGame(program: Program<KamikazeJoe>, player2: anchor.web3.Keypair, user2Pda: PublicKey, gamePda: PublicKey, x= 0, y = 0) {
     return await program.methods
         .joinGame(x, y)
         .accounts({
@@ -51,7 +64,7 @@ async function JoinGame(program: Program<Chainstrike>, player2: anchor.web3.Keyp
         .signers([player2]).rpc()
 }
 
-function FindGamePda(userPda: PublicKey, id: BN, program: Program<Chainstrike>) {
+function FindGamePda(userPda: PublicKey, id: BN, program: Program<KamikazeJoe>) {
     let gamePda = PublicKey.findProgramAddressSync(
         [Buffer.from("game"), userPda.toBuffer(), id.toBuffer("le", 8)],
         program.programId
@@ -59,7 +72,7 @@ function FindGamePda(userPda: PublicKey, id: BN, program: Program<Chainstrike>) 
     return gamePda;
 }
 
-function FindUserPda(player: PublicKey, program: Program<Chainstrike>) {
+function FindUserPda(player: PublicKey, program: Program<KamikazeJoe>) {
     let userPda = PublicKey.findProgramAddressSync(
         [Buffer.from("user"), player.toBuffer()],
         program.programId
@@ -67,12 +80,20 @@ function FindUserPda(player: PublicKey, program: Program<Chainstrike>) {
     return userPda;
 }
 
-describe("chainstrike", () => {
+function FindMatchesPda(program: Program<KamikazeJoe>) {
+    let matchesPda = PublicKey.findProgramAddressSync(
+        [Buffer.from("matches")],
+        program.programId
+    )[0];
+    return matchesPda;
+}
+
+describe("kamikaze_joe", () => {
 
     // Configure the client to use the local cluster.
     anchor.setProvider(anchor.AnchorProvider.env());
 
-    const program = anchor.workspace.Chainstrike as Program<Chainstrike>;
+    const program = anchor.workspace.KamikazeJoe as Program<KamikazeJoe>;
     const maxId = 100000;
 
     it("Create User!", async () => {
@@ -88,6 +109,25 @@ describe("chainstrike", () => {
         await provider.connection.confirmTransaction(tx, "confirmed");
 
         console.log("Create Game signature", tx);
+    });
+
+    it("Create Matches!", async () => {
+
+        // First generate the account to initialize the game
+        const provider = anchor.AnchorProvider.env();
+        let player = await new_funded_address(provider);
+
+        let matchesPda = FindMatchesPda(program);
+
+        // Initialize User if needed
+        if(await provider.connection.getAccountInfo(matchesPda) == null) {
+            let tx = await InitializeMatches(program, player, matchesPda);
+            await provider.connection.confirmTransaction(tx, "confirmed");
+            console.log("Create Matches signature", tx);
+        }else{
+            console.log("Matches already initialized");
+        }
+
     });
 
     it("Create Game!", async () => {
@@ -250,9 +290,9 @@ describe("chainstrike", () => {
         console.log("Init User 3 signature", tx);
         await provider.connection.confirmTransaction(tx, "confirmed");
 
-        tx = await JoinGame(program, player3, user3Pda, gamePda, 27, 27);
-        console.log("Join 3 Game signature", tx);
-        await provider.connection.confirmTransaction(tx, "confirmed");
+        // tx = await JoinGame(program, player3, user3Pda, gamePda, 27, 27);
+        // console.log("Join 3 Game signature", tx);
+        // await provider.connection.confirmTransaction(tx, "confirmed");
 
         // Explode transaction
         tx = await program.methods

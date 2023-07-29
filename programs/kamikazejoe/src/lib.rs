@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-declare_id!("F91oPUhkygpaR4KAazG1mXhQ6yYavh6LbQq46r2LKM6b");
+declare_id!("JoeXD3mj5VXB2xKUz6jJ8D2AC72pXCydA6fnQJg2JiG");
 
 mod instructions;
 mod states;
@@ -11,7 +11,7 @@ use instructions::*;
 pub use states::*;
 
 #[program]
-pub mod chainstrike {
+pub mod kamikaze_joe {
     use super::*;
 
     pub fn initialize_user(ctx: Context<InitializeUser>) -> Result<()> {
@@ -20,6 +20,10 @@ pub mod chainstrike {
 
     pub fn initialize_game(ctx: Context<InitializeGame>) -> Result<()> {
         create_game::handler(ctx)
+    }
+
+    pub fn initialize_matches(ctx: Context<InitializeMatches>) -> Result<()> {
+        create_matches::handler(ctx)
     }
 
     pub fn join_game(ctx: Context<JoinGame>, x: u8, y: u8) -> Result<()> {
@@ -46,6 +50,17 @@ pub struct InitializeUser<'info> {
     pub system_program: Program<'info, System>,
 }
 
+#[derive(Accounts)]
+pub struct InitializeMatches<'info> {
+    #[account(mut)]
+    pub payer: Signer<'info>,
+
+    #[account(init, payer=payer, space = Matches::size(), seeds=[seeds::SEED_MATCHES], bump)]
+    pub matches: Account<'info, Matches>,
+
+    pub system_program: Program<'info, System>,
+}
+
 
 #[derive(Accounts)]
 pub struct InitializeGame<'info> {
@@ -55,6 +70,8 @@ pub struct InitializeGame<'info> {
     pub user: Account<'info, User>,
     #[account(init, payer = creator, space = Game::size(), seeds = [seeds::SEED_GAME, user.key().as_ref(), &user.games.to_be_bytes()], bump)]
     pub game: Account<'info, Game>,
+    #[account(mut,address=Matches::pda().0)]
+    pub matches: Option<Account<'info, Matches>>,
     pub system_program: Program<'info, System>,
 }
 

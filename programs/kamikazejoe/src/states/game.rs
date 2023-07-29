@@ -30,7 +30,7 @@ impl Game {
     }
 
     pub fn is_game_active(&self) -> bool {
-        return self.game_state == GameState::Active;
+        return self.game_state == GameState::Waiting || self.game_state == GameState::Active;
     }
 
     pub fn width(&self) -> usize {
