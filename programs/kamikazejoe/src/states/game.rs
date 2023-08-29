@@ -1,17 +1,34 @@
 use anchor_lang::prelude::*;
-use crate::Cell::Block;
-use crate::Cell::Recharge;
+use crate::errors::KamikazeJoeError;
 
 #[account]
-#[derive(InitSpace, Debug, Default)]
+#[derive(InitSpace, Debug)]
 pub struct Game {
-    pub created_at: i64,
+    pub width: u8,
+    pub height: u8,
+    pub seed: u8,
+    pub ticket_price: u64,
+    pub prize_claimed: bool,
     pub owner: Pubkey,
-    pub grid: Grid,
     pub game_state: GameState,
 
     #[max_len(10)]
     pub players: Vec<Player>,
+}
+
+impl Default for Game {
+    fn default() -> Self {
+        Game {
+            width: 30,
+            height: 30,
+            seed: 0,
+            ticket_price: 100000000,
+            prize_claimed: false,
+            owner: Pubkey::default(),
+            game_state: GameState::Waiting,
+            players: vec![],
+        }
+    }
 }
 
 impl Game {
@@ -20,25 +37,109 @@ impl Game {
         8 + Game::INIT_SPACE
     }
 
+    pub fn width(&self) -> usize {
+        return self.width as usize
+    }
+
+    pub fn height(&self) -> usize {
+        return self.height as usize
+    }
+
     pub fn is_cell_valid(&self, x: usize, y: usize) -> bool {
-        return x < self.width() && y < self.height() && (
-            self.grid.cells[x][y] == Cell::Empty || self.grid.cells[x][y] == Cell::Recharge);
+        return x < self.width as usize && y < self.height as usize && (self.is_recharge(x, y) || !self.is_block(x, y));
     }
 
     pub fn is_recharge(&self, x: usize, y: usize) -> bool {
-        return self.grid.cells[x][y] == Cell::Recharge
+        let shift = self.seed % 14;
+        let x_plus_shift = x as i64 + shift as i64;
+        let y_minus_shift = y as i64 - shift as i64;
+
+        let x_mod_13 = x_plus_shift % 13;
+        let y_mod_14 = y_minus_shift % 14;
+        let x_mod_28 = x_plus_shift % 28;
+        let y_mod_28 = y_minus_shift % 28;
+
+        x_mod_13 == y_mod_14
+            && (x_mod_28 == 27 || x_plus_shift == 1)
+            && x_plus_shift != y_minus_shift
+            && x_mod_28 - y_mod_28 < 15
+    }
+
+    pub fn is_block(&self, x: usize, y: usize) -> bool {
+        let len = (4 + self.seed % 6) as usize;
+        let x_mod_28 = x % 28;
+        let y_mod_28 = y % 28;
+
+        if (y_mod_28 == 5 && x_mod_28 > 3 && x_mod_28 < 3 + len)
+            || (y_mod_28 == 23 && x_mod_28 > 7 && x_mod_28 < 7 + std::cmp::max(5, len))
+            || (y_mod_28 == 12 && x_mod_28 > 12 && x_mod_28 < 12 + len)
+            || (x_mod_28 == 19 && y_mod_28 > 12 && y_mod_28 < 12 + std::cmp::max(5, len))
+        {
+            return true;
+        }
+
+        let x_squared_plus_y = x * x + x * y;
+        let y_squared = y * y;
+        let divisor = (47 % 60) - (self.seed % 59);
+        let remainder = (x_squared_plus_y + y_squared + self.seed as usize) % divisor as usize;
+
+        return remainder == 7;
     }
 
     pub fn is_game_active(&self) -> bool {
         return self.game_state == GameState::Waiting || self.game_state == GameState::Active;
     }
 
-    pub fn width(&self) -> usize {
-        return self.grid.cells.len()
+    pub fn can_claim(&self, player: &Pubkey ) -> bool {
+        return self.game_state == GameState::Won { winner: *player }
+            && self.prize_claimed == false
+            && self.ticket_price > 0;
     }
 
-    pub fn height(&self) -> usize {
-        return self.grid.cells[0].len()
+    pub fn get_player_index(&self, player_key: Pubkey) -> Result<usize> {
+        let mut player_index = 0;
+        let mut player_found = false;
+        for (index, player_object) in self.players.iter().enumerate() {
+            if player_object.address == player_key {
+                player_index = index;
+                player_found = true;
+                break;
+            }
+        }
+        if !player_found {
+            return Err(KamikazeJoeError::PlayerNotFound.into());
+        }
+        Ok(player_index)
+    }
+
+    // Mutable methods
+
+    pub fn reduce_energy(&mut self, player_index: usize, energy: u8) {
+        if energy > self.players[player_index].energy {
+            self.players[player_index].energy = 0;
+        }else {
+            self.players[player_index].energy = self.players[player_index].energy - energy
+        }
+    }
+
+    pub fn check_if_won(&mut self, player_index: usize) {
+        if let GameState::Active = self.game_state {
+            let target_address = self.players[player_index].address;
+            let mut all_players_match = true;
+
+            for player in &self.players {
+                if player.energy > 0 && player.address != target_address {
+                    all_players_match = false;
+                    break;
+                }
+            }
+
+            if all_players_match {
+                self.game_state = GameState::Won {
+                    winner: target_address,
+                };
+            }
+        }
     }
 }
 
@@ -57,45 +158,7 @@ impl Default for GameState {
 
 #[derive(InitSpace, Copy, Clone, Debug, AnchorSerialize, AnchorDeserialize)]
 pub struct Grid {
-    pub cells: [[Cell; 28]; 28],
-}
-
-impl Default for Grid {
-    fn default() -> Self {
-        let mut grid = Grid {
-            cells: [[Cell::Empty; 28]; 28],
-        };
-
-        let row = &mut grid.cells[10];
-        row.iter_mut().skip(5).take(5).for_each(|cell| *cell = Block);
-
-        let cells_to_set = &[(4, 5), (5, 5), (6, 5), (7, 5)];
-        for &(x, y) in cells_to_set {
-            grid.cells[x][y] = Block;
-        }
-
-        let cells_to_set = &[(4, 23), (5, 23), (6, 23), (7, 23)];
-        for &(x, y) in cells_to_set {
-            grid.cells[x][y] = Block;
-        }
-
-        let cells_to_set = &[(13, 13), (14, 13), (15, 13), (16, 13)];
-        for &(x, y) in cells_to_set {
-            grid.cells[x][y] = Block;
-        }
-
-        grid.cells[3][3] = Block;
-        grid.cells[24][23] = Block;
-        grid.cells[24][22] = Block;
-
-        grid.cells[5][13] = Block;
-        grid.cells[24][4] = Block;
-
-        grid.cells[1][14] = Recharge;
-        grid.cells[26][14] = Recharge;
-
-        grid
-    }
+    pub cells: [[Cell; 30]; 30],
 }
 
 

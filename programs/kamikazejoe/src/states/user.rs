@@ -6,6 +6,7 @@ use crate::seeds::SEED_USER;
 pub struct User {
     pub current_game: Option<Pubkey>,
     pub games: u64,
+    pub won: u64,
 }
 
 impl User {

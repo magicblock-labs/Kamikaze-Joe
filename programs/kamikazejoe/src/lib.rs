@@ -18,12 +18,16 @@ pub mod kamikaze_joe {
         create_user::handler(ctx)
     }
 
-    pub fn initialize_game(ctx: Context<InitializeGame>) -> Result<()> {
-        create_game::handler(ctx)
+    pub fn initialize_game(ctx: Context<InitializeGame>,
+                           width: Option<u8>,
+                           height: Option<u8>,
+                           arena_seed: Option<u8>,
+                           price_pool_lamports: Option<u64>) -> Result<()> {
+        create_game::handler(ctx, width, height, arena_seed, price_pool_lamports)
     }
 
-    pub fn initialize_matches(ctx: Context<InitializeMatches>) -> Result<()> {
-        create_matches::handler(ctx)
+    pub fn initialize(_ctx: Context<Initialize>) -> Result<()> {
+        initialize::handler()
     }
 
     pub fn join_game(ctx: Context<JoinGame>, x: u8, y: u8) -> Result<()> {
@@ -37,6 +41,24 @@ pub mod kamikaze_joe {
     pub fn explode(ctx: Context<Explode>) -> Result<()> {
         explode::handler(ctx)
     }
+
+    pub fn claim_prize(ctx: Context<ClaimPrize>) -> Result<()> {
+        claim_prize::handler(ctx)
+    }
+}
+
+#[derive(Accounts)]
+pub struct Initialize<'info> {
+    #[account(mut)]
+    pub payer: Signer<'info>,
+
+    #[account(init, payer=payer, space = Matches::size(), seeds=[seeds::SEED_MATCHES], bump)]
+    pub matches: Account<'info, Matches>,
+
+    #[account(init, payer=payer, space = Vault::size(), seeds = [seeds::SEED_VAULT], bump)]
+    pub vault: Account<'info, Vault>,
+
+    pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
@@ -50,23 +72,12 @@ pub struct InitializeUser<'info> {
     pub system_program: Program<'info, System>,
 }
 
-#[derive(Accounts)]
-pub struct InitializeMatches<'info> {
-    #[account(mut)]
-    pub payer: Signer<'info>,
-
-    #[account(init, payer=payer, space = Matches::size(), seeds=[seeds::SEED_MATCHES], bump)]
-    pub matches: Account<'info, Matches>,
-
-    pub system_program: Program<'info, System>,
-}
-
 
 #[derive(Accounts)]
 pub struct InitializeGame<'info> {
     #[account(mut)]
     pub creator: Signer<'info>,
-    #[account(mut,address=User::pda(creator.key()).0)]
+    #[account(mut, address=User::pda(creator.key()).0)]
     pub user: Account<'info, User>,
     #[account(init, payer = creator, space = Game::size(), seeds = [seeds::SEED_GAME, user.key().as_ref(), &user.games.to_be_bytes()], bump)]
     pub game: Account<'info, Game>,
@@ -83,6 +94,9 @@ pub struct JoinGame<'info> {
     pub user: Account<'info, User>,
     #[account(mut)]
     pub game: Account<'info, Game>,
+    #[account(mut, address=Vault::pda().0)]
+    pub vault: Account<'info, Vault>,
+    pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
@@ -99,4 +113,17 @@ pub struct Explode<'info> {
     pub player: Signer<'info>,
     #[account(mut)]
     pub game: Account<'info, Game>,
+}
+
+#[derive(Accounts)]
+pub struct ClaimPrize<'info> {
+    #[account(mut)]
+    pub player: Signer<'info>,
+    #[account(mut)]
+    pub user: Account<'info, User>,
+    #[account(mut)]
+    pub game: Account<'info, Game>,
+    #[account(mut, address=Vault::pda().0)]
+    pub vault: Account<'info, Vault>,
+    pub system_program: Program<'info, System>,
 }

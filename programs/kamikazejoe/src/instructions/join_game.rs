@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use anchor_lang::system_program::{transfer, Transfer};
 use crate::{Facing, GameState, JoinGame, Player};
 use crate::errors::KamikazeJoeError;
 
@@ -7,6 +8,26 @@ pub fn handler(
 ) -> Result<()> {
 
     let game_account = &mut ctx.accounts.game;
+
+    if !game_account.is_cell_valid(x as usize, y as usize){
+        return Err(KamikazeJoeError::InvalidJoin.into());
+    }
+
+    if game_account.ticket_price > 0 {
+
+        // Transfer to system owned account
+        transfer(
+            CpiContext::new(
+                ctx.accounts.system_program.to_account_info(),
+                Transfer {
+                    from: ctx.accounts.player.to_account_info(),
+                    to: ctx.accounts.vault.to_account_info(),
+                },
+            ),
+            game_account.ticket_price,
+        )?;
+    }
+
     game_account.players.push(Player{
         x,
         y,
@@ -26,6 +47,7 @@ pub fn handler(
 
     let user_account = &mut ctx.accounts.user;
     user_account.current_game = Some(game_account.key());
+    user_account.games += 1;
 
     msg!("Joined game");
 

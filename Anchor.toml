@@ -12,7 +12,7 @@ kamikaze_joe = "JoeXD3mj5VXB2xKUz6jJ8D2AC72pXCydA6fnQJg2JiG"
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "devnet"
+cluster = "localnet"
 wallet = "/Users/gabrielepicco/.config/solana/id.json"
 
 [scripts]

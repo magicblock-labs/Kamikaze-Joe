@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use crate::{Game, Explode, GameState};
+use crate::{Game, Explode};
 use crate::errors::KamikazeJoeError;
 
 const ENERGY_TO_EXPLODE: u8 = 20;
@@ -15,23 +15,14 @@ pub fn handler(
     }
 
     // Find player in game_account Players Vec
-    let mut player_index = 0;
-    let mut player_found = false;
-    for (index, player_object) in ctx.accounts.game.players.iter().enumerate() {
-        if player_object.address == player_key {
-            player_index = index;
-            player_found = true;
-            break;
-        }
-    }
-
-    // Check if player is found
-    if !player_found {
-        return Err(KamikazeJoeError::PlayerNotFound.into());
-    }
+    let player_index = match ctx.accounts.game.get_player_index(player_key) {
+        Ok(value) => value,
+        Err(error) => return Err(error),
+    };
 
     return explode(&mut ctx.accounts.game, player_index);
 }
+
 
 fn explode(game: &mut Account<Game>, player_index: usize) -> Result<()>  {
 
@@ -55,6 +46,8 @@ fn explode(game: &mut Account<Game>, player_index: usize) -> Result<()>  {
         (x + 1, y - 1),
     ];
 
+    let mut killed = false;
+
     for c in cells_to_check {
         let x = c.0;
         let y = c.1;
@@ -72,24 +65,21 @@ fn explode(game: &mut Account<Game>, player_index: usize) -> Result<()>  {
             }
             if player_object.x == x && player_object.y == y {
                 player_object.energy = 0;
+                killed = true;
             }
         }
     }
 
-    // Reduce energy
-    if ENERGY_TO_EXPLODE > game.players[player_index].energy {
-        game.players[player_index].energy = 0;
-    }else {
-        game.players[player_index].energy = game.players[player_index].energy - ENERGY_TO_EXPLODE
+    // Reset energy if killed someone
+    if killed == true {
+        game.players[player_index].energy = 100;
     }
 
-    // Check if game is ended
-    if game.game_state == GameState::Active && game.players.iter().all(|player| player.energy == 0 ||
-        (player.energy > 0 && player.address == game.players[player_index].address)) {
-        game.game_state = GameState::Won {
-            winner: game.players[player_index].address,
-        };
-    }
+    // Reduce energy
+    game.reduce_energy(player_index, ENERGY_TO_EXPLODE);
+
+    // Check if game ended
+    game.check_if_won(player_index);
 
     Ok(())
 }

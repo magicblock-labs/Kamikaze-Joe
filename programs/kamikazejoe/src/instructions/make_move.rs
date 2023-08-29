@@ -15,20 +15,10 @@ pub fn handler(
     }
 
     // Find player in game_account Players Vec
-    let mut player_index = 0;
-    let mut player_found = false;
-    for (index, player_object) in ctx.accounts.game.players.iter().enumerate() {
-        if player_object.address == player_key {
-            player_index = index;
-            player_found = true;
-            break;
-        }
-    }
-
-    // Check if player is found
-    if !player_found {
-        return Err(KamikazeJoeError::PlayerNotFound.into());
-    }
+    let player_index = match ctx.accounts.game.get_player_index(player_key) {
+        Ok(value) => value,
+        Err(error) => return Err(error),
+    };
 
     // Check if energy is valid
     if energy > 5 {
@@ -104,13 +94,11 @@ fn move_player(game: &mut Account<Game>, player_index: usize, direction: Facing,
     game.players[player_index].y = final_y;
     game.players[player_index].facing = direction;
 
-    if energy > game.players[player_index].energy {
-        game.players[player_index].energy = 0;
-    }else {
-        game.players[player_index].energy = game.players[player_index].energy - energy
-    }
+    // Reduce energy
+    game.reduce_energy(player_index, energy);
 
-    msg!(&format!("Moved to {final_x}, {final_y}"));
+    // Check if game ended
+    game.check_if_won(player_index);
 
     Ok(())
 }

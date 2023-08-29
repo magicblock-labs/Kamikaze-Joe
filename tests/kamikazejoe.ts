@@ -28,12 +28,13 @@ async function InitializeUser(program: Program<KamikazeJoe>, player: anchor.web3
     return tx;
 }
 
-async function InitializeMatches(program: Program<KamikazeJoe>, player: anchor.web3.Keypair, matchesPda: PublicKey) {
+async function Initialize(program: Program<KamikazeJoe>, player: anchor.web3.Keypair, matchesPda: PublicKey) {
     let tx = await program.methods
-        .initializeMatches()
+        .initialize()
         .accounts({
             payer: player.publicKey,
             matches: matchesPda,
+            vault: FindVaultPda(program),
             systemProgram: anchor.web3.SystemProgram.programId,
         })
         .signers([player]).rpc()
@@ -42,7 +43,7 @@ async function InitializeMatches(program: Program<KamikazeJoe>, player: anchor.w
 
 async function InitializeGame(program: Program<KamikazeJoe>, player: anchor.web3.Keypair, userPda: PublicKey, gamePda: PublicKey) {
     return await program.methods
-        .initializeGame()
+        .initializeGame(50, 50, 0, null)
         .accounts({
             creator: player.publicKey,
             user: userPda,
@@ -60,6 +61,7 @@ async function JoinGame(program: Program<KamikazeJoe>, player2: anchor.web3.Keyp
             player: player2.publicKey,
             user: user2Pda,
             game: gamePda,
+            vault: FindVaultPda(program),
         })
         .signers([player2]).rpc()
 }
@@ -74,7 +76,7 @@ function FindGamePda(userPda: PublicKey, id: BN, program: Program<KamikazeJoe>) 
 
 function FindUserPda(player: PublicKey, program: Program<KamikazeJoe>) {
     let userPda = PublicKey.findProgramAddressSync(
-        [Buffer.from("user"), player.toBuffer()],
+        [Buffer.from("userPda"), player.toBuffer()],
         program.programId
     )[0];
     return userPda;
@@ -86,6 +88,14 @@ function FindMatchesPda(program: Program<KamikazeJoe>) {
         program.programId
     )[0];
     return matchesPda;
+}
+
+function FindVaultPda(program: Program<KamikazeJoe>) {
+    let vaultPda = PublicKey.findProgramAddressSync(
+        [Buffer.from("vault")],
+        program.programId
+    )[0];
+    return vaultPda;
 }
 
 describe("kamikaze_joe", () => {
@@ -108,7 +118,7 @@ describe("kamikaze_joe", () => {
         let tx = await InitializeUser(program, player, userPda);
         await provider.connection.confirmTransaction(tx, "confirmed");
 
-        console.log("Create Game signature", tx);
+        console.log("Create User signature", tx);
     });
 
     it("Create Matches!", async () => {
@@ -119,13 +129,13 @@ describe("kamikaze_joe", () => {
 
         let matchesPda = FindMatchesPda(program);
 
-        // Initialize User if needed
+        // Initialize if needed
         if(await provider.connection.getAccountInfo(matchesPda) == null) {
-            let tx = await InitializeMatches(program, player, matchesPda);
+            let tx = await Initialize(program, player, matchesPda);
             await provider.connection.confirmTransaction(tx, "confirmed");
-            console.log("Create Matches signature", tx);
+            console.log("Initialize signature", tx);
         }else{
-            console.log("Matches already initialized");
+            console.log("Already initialized");
         }
 
     });
@@ -216,7 +226,7 @@ describe("kamikaze_joe", () => {
 
         // Make a move up
         tx = await program.methods
-            .makeMove({up:{}}, 1)
+            .makeMove({up:{}}, 3)
             .accounts({
                 player: player.publicKey,
                 game: gamePda,
@@ -290,9 +300,61 @@ describe("kamikaze_joe", () => {
         console.log("Init User 3 signature", tx);
         await provider.connection.confirmTransaction(tx, "confirmed");
 
-        // tx = await JoinGame(program, player3, user3Pda, gamePda, 27, 27);
-        // console.log("Join 3 Game signature", tx);
-        // await provider.connection.confirmTransaction(tx, "confirmed");
+        // Explode transaction
+        tx = await program.methods
+            .explode()
+            .accounts({
+                player: player.publicKey,
+                game: gamePda,
+            }).signers([player]).rpc();
+
+        console.log("Explode signature", tx);
+        await provider.connection.confirmTransaction(tx, "confirmed");
+    });
+
+    it("Win and claim", async () => {
+
+        const provider = anchor.AnchorProvider.env();
+        let player = await new_funded_address(provider);
+
+        let userPda = FindUserPda(player.publicKey, program);
+
+        // Initialize User.
+        let tx = await InitializeUser(program, player, userPda);
+        console.log("Init User signature", tx);
+        await provider.connection.confirmTransaction(tx, "confirmed");
+
+        let id = new BN(0);
+        let gamePda = FindGamePda(userPda, id, program);
+
+        // Initialize Game.
+        tx = await InitializeGame(program, player, userPda, gamePda);
+        console.log("Create Game signature", tx);
+        await provider.connection.confirmTransaction(tx, "confirmed");
+
+        // Join the game
+        tx = await JoinGame(program, player, userPda, gamePda, 2,2);
+
+        console.log("Join Game signature", tx);
+        await provider.connection.confirmTransaction(tx, "confirmed");
+
+        // Join the game with a second player
+        let player2 = await new_funded_address(provider);
+        let user2Pda = FindUserPda(player2.publicKey, program);
+        tx = await InitializeUser(program, player2, user2Pda);
+        console.log("Init User 2 signature", tx);
+        await provider.connection.confirmTransaction(tx, "confirmed");
+
+        tx = await JoinGame(program, player2, user2Pda, gamePda, 2, 3);
+        console.log("Join 2 Game signature", tx);
+        await provider.connection.confirmTransaction(tx, "confirmed");
+
+        // Join the game with a third player
+        let player3 = await new_funded_address(provider);
+        let user3Pda = FindUserPda(player3.publicKey, program);
+        tx = await InitializeUser(program, player3, user3Pda);
+        console.log("Init User 3 signature", tx);
+        await provider.connection.confirmTransaction(tx, "confirmed");
 
         // Explode transaction
         tx = await program.methods
@@ -303,6 +365,20 @@ describe("kamikaze_joe", () => {
             }).signers([player]).rpc();
 
         console.log("Explode signature", tx);
+        await provider.connection.confirmTransaction(tx, "confirmed");
+
+        // Claim Price transaction
+        tx = await program.methods
+            .claimPrize()
+            .accounts({
+                player: player.publicKey,
+                user: userPda,
+                game: gamePda,
+                vault: FindVaultPda(program),
+            })
+            .signers([player]).rpc()
+
+        console.log("Claim price signature", tx);
         await provider.connection.confirmTransaction(tx, "confirmed");
     });
 
