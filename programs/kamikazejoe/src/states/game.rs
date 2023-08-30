@@ -12,7 +12,7 @@ pub struct Game {
     pub owner: Pubkey,
     pub game_state: GameState,
 
-    #[max_len(10)]
+    #[max_len(20)]
     pub players: Vec<Player>,
 }
 
