@@ -6,6 +6,7 @@ mod instructions;
 mod states;
 mod errors;
 mod seeds;
+mod checks;
 
 use instructions::*;
 pub use states::*;
@@ -90,9 +91,9 @@ pub struct InitializeGame<'info> {
 pub struct JoinGame<'info> {
     #[account(mut)]
     pub player: Signer<'info>,
-    #[account(mut)]
+    #[account(mut, address=User::pda(player.key()).0)]
     pub user: Account<'info, User>,
-    #[account(mut)]
+    #[account(mut, address=Game::pda(User::pda(game.owner.key()).0, &game.id.to_be_bytes()).0)]
     pub game: Account<'info, Game>,
     #[account(mut, address=Vault::pda().0)]
     pub vault: Account<'info, Vault>,
@@ -103,7 +104,9 @@ pub struct JoinGame<'info> {
 pub struct MakeMove<'info> {
     #[account(mut)]
     pub player: Signer<'info>,
-    #[account(mut)]
+    #[account(mut, address=User::pda(player.key()).0)]
+    pub user: Account<'info, User>,
+    #[account(mut, address=Game::pda(User::pda(game.owner.key()).0, &game.id.to_be_bytes()).0)]
     pub game: Account<'info, Game>,
 }
 
@@ -111,7 +114,7 @@ pub struct MakeMove<'info> {
 pub struct Explode<'info> {
     #[account(mut)]
     pub player: Signer<'info>,
-    #[account(mut)]
+    #[account(mut, address=Game::pda(User::pda(game.owner.key()).0, &game.id.to_be_bytes()).0)]
     pub game: Account<'info, Game>,
 }
 
@@ -119,9 +122,9 @@ pub struct Explode<'info> {
 pub struct ClaimPrize<'info> {
     #[account(mut)]
     pub player: Signer<'info>,
-    #[account(mut)]
+    #[account(mut, address=User::pda(player.key()).0)]
     pub user: Account<'info, User>,
-    #[account(mut)]
+    #[account(mut, address=Game::pda(User::pda(game.owner.key()).0, &game.id.to_be_bytes()).0)]
     pub game: Account<'info, Game>,
     #[account(mut, address=Vault::pda().0)]
     pub vault: Account<'info, Vault>,

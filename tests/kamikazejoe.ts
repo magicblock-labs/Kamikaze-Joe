@@ -68,7 +68,7 @@ async function JoinGame(program: Program<KamikazeJoe>, player2: anchor.web3.Keyp
 
 function FindGamePda(userPda: PublicKey, id: BN, program: Program<KamikazeJoe>) {
     let gamePda = PublicKey.findProgramAddressSync(
-        [Buffer.from("game"), userPda.toBuffer(), id.toBuffer("le", 8)],
+        [Buffer.from("game"), userPda.toBuffer(), id.toBuffer("le", 4)],
         program.programId
     )[0];
     return gamePda;
@@ -76,7 +76,7 @@ function FindGamePda(userPda: PublicKey, id: BN, program: Program<KamikazeJoe>) 
 
 function FindUserPda(player: PublicKey, program: Program<KamikazeJoe>) {
     let userPda = PublicKey.findProgramAddressSync(
-        [Buffer.from("userPda"), player.toBuffer()],
+        [Buffer.from("user-pda"), player.toBuffer()],
         program.programId
     )[0];
     return userPda;
@@ -151,8 +151,8 @@ describe("kamikaze_joe", () => {
         console.log("Init User signature", tx);
         await provider.connection.confirmTransaction(tx, "confirmed");
 
-        let id = new BN(0);
-        let gamePda = FindGamePda(userPda, id, program);
+        let id = 0;
+        let gamePda = FindGamePda(userPda, new BN(id), program);
 
         // Initialize Game.
         tx = await InitializeGame(program, player, userPda, gamePda);
@@ -229,6 +229,7 @@ describe("kamikaze_joe", () => {
             .makeMove({up:{}}, 3)
             .accounts({
                 player: player.publicKey,
+                user: userPda,
                 game: gamePda,
             }).signers([player]).rpc();
         console.log("Make move up signature", tx);
@@ -239,6 +240,7 @@ describe("kamikaze_joe", () => {
             .makeMove({right:{}}, 2)
             .accounts({
                 player: player.publicKey,
+                user: userPda,
                 game: gamePda,
             }).signers([player]).rpc();
         console.log("Make move rx signature", tx);
@@ -249,6 +251,7 @@ describe("kamikaze_joe", () => {
             .makeMove({up:{}}, 4)
             .accounts({
                 player: player.publicKey,
+                user: userPda,
                 game: gamePda,
             }).signers([player]).rpc();
         console.log("Make move up signature", tx);

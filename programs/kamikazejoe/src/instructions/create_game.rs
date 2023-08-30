@@ -9,7 +9,10 @@ pub fn handler(
     arena_seed: Option<u8>,
     price_pool_lamports: Option<u64>,
 ) -> Result<()> {
+
     let game_account = &mut ctx.accounts.game;
+    let user_account = &mut ctx.accounts.user;
+
     let mut game_object = Game::default();
 
     game_object.owner = *ctx.accounts.creator.unsigned_key();
@@ -19,15 +22,15 @@ pub fn handler(
     if let Some(s) = arena_seed { game_object.seed = s; }
     if let Some(p) = price_pool_lamports { game_object.ticket_price = p; }
 
+    game_object.id = user_account.games;
+    user_account.increment_games();
+
     // Check if size is valid
     if game_object.width <= 0 && game_object.height <= 0 {
         return Err(KamikazeJoeError::InvalidSize.into());
     }
 
     game_account.set_inner(game_object);
-
-    let user_account = &mut ctx.accounts.user;
-    user_account.increment_games();
 
     let matches = &mut ctx.accounts.matches;
     if let Some(m) = matches{

@@ -19,5 +19,6 @@ default = []
 anchor-lang = { version = "0.28.0"}
 anchor-spl = "0.28.0"
 getrandom = { version = "0.2.9", features = ["custom"] }
+gpl-session = { version = "2.0.0", features = ["no-entrypoint"] }
 solana-program = "=1.14.17"
 winnow="=0.4.1"

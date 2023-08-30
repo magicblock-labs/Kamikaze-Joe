@@ -17,5 +17,7 @@ pub enum KamikazeJoeError {
     #[msg("This position is not valid for joining the game")]
     InvalidJoin,
     #[msg("Price can't be claimed")]
-    InvalidClaim
+    InvalidClaim,
+    #[msg("Invalid Operation")]
+    Overflow,
 }

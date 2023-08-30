@@ -1,9 +1,11 @@
 use anchor_lang::prelude::*;
 use crate::errors::KamikazeJoeError;
+use crate::seeds::SEED_GAME;
 
 #[account]
 #[derive(InitSpace, Debug)]
 pub struct Game {
+    pub id: u32,
     pub width: u8,
     pub height: u8,
     pub seed: u8,
@@ -12,13 +14,14 @@ pub struct Game {
     pub owner: Pubkey,
     pub game_state: GameState,
 
-    #[max_len(20)]
+    #[max_len(30)]
     pub players: Vec<Player>,
 }
 
 impl Default for Game {
     fn default() -> Self {
         Game {
+            id: 0,
             width: 30,
             height: 30,
             seed: 0,
@@ -35,6 +38,10 @@ impl Game {
 
     pub fn size() -> usize {
         8 + Game::INIT_SPACE
+    }
+
+    pub fn pda(user: Pubkey, id: &[u8]) -> (Pubkey, u8) {
+        Pubkey::find_program_address(&[SEED_GAME, user.as_ref(), id], &crate::ID)
     }
 
     pub fn width(&self) -> usize {

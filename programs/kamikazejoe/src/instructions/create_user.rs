@@ -8,6 +8,7 @@ pub fn handler(
     let user_account = &mut ctx.accounts.user;
     let user_object = User::default();
     user_account.set_inner(user_object);
+    user_account.authority = *ctx.accounts.payer.unsigned_key();
 
     Ok(())
 }

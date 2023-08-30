@@ -13,21 +13,6 @@ pub fn handler(
         return Err(KamikazeJoeError::InvalidJoin.into());
     }
 
-    if game_account.ticket_price > 0 {
-
-        // Transfer to system owned account
-        transfer(
-            CpiContext::new(
-                ctx.accounts.system_program.to_account_info(),
-                Transfer {
-                    from: ctx.accounts.player.to_account_info(),
-                    to: ctx.accounts.vault.to_account_info(),
-                },
-            ),
-            game_account.ticket_price,
-        )?;
-    }
-
     game_account.players.push(Player{
         x,
         y,
@@ -46,8 +31,22 @@ pub fn handler(
     }
 
     let user_account = &mut ctx.accounts.user;
-    user_account.current_game = Some(game_account.key());
     user_account.games += 1;
+
+    if game_account.ticket_price > 0 {
+
+        // Transfer to system owned account
+        transfer(
+            CpiContext::new(
+                ctx.accounts.system_program.to_account_info(),
+                Transfer {
+                    from: ctx.accounts.player.to_account_info(),
+                    to: ctx.accounts.vault.to_account_info(),
+                },
+            ),
+            game_account.ticket_price,
+        )?;
+    }
 
     msg!("Joined game");
 
