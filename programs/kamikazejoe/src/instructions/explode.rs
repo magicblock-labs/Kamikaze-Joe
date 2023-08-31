@@ -1,13 +1,28 @@
 use anchor_lang::prelude::*;
-use crate::{Game, Explode};
+use crate::{Game, Explode, User};
+use crate::checks::check_session_token;
 use crate::errors::KamikazeJoeError;
+use crate::id;
 
 const ENERGY_TO_EXPLODE: u8 = 20;
 
 pub fn handler(
     ctx: Context<Explode>,
 ) -> Result<()> {
-    let player_key = *ctx.accounts.player.unsigned_key();
+
+    let player_key = ctx.accounts.user.authority;
+
+    if ctx.accounts.user.key() != User::pda(ctx.accounts.user.authority).0 {
+        return Err(KamikazeJoeError::InvalidAuthority.into());
+    }
+
+    // Check session token
+    check_session_token(
+        ctx.accounts.session_token.clone(),
+        ctx.accounts.payer.clone().key,
+        &ctx.accounts.user.authority,
+        &id(),
+    )?;
 
     // Check if game is active
     if !ctx.accounts.game.is_game_active() {
