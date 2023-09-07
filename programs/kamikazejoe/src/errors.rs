@@ -20,4 +20,8 @@ pub enum KamikazeJoeError {
     InvalidClaim,
     #[msg("Invalid Operation")]
     Overflow,
+    #[msg("Invalid User")]
+    InvalidUser,
+    #[msg("Player key does not match user authority")]
+    InvalidAuthority,
 }

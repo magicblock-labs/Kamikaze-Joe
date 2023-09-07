@@ -1,13 +1,28 @@
 use anchor_lang::prelude::*;
-use crate::{Facing, Game, MakeMove};
+use crate::{Facing, Game, MakeMove, User};
+use crate::checks::check_session_token;
 use crate::errors::KamikazeJoeError;
+use crate::id;
 
 pub fn handler(
     ctx: Context<MakeMove>,
     direction: Facing,
     energy: u8,
 ) -> Result<()> {
-    let player_key = *ctx.accounts.player.unsigned_key();
+
+    let player_key = ctx.accounts.user.authority;
+
+    if ctx.accounts.user.key() != User::pda(ctx.accounts.user.authority).0 {
+        return Err(KamikazeJoeError::InvalidAuthority.into());
+    }
+
+    // Check session token
+    check_session_token(
+        ctx.accounts.session_token.clone(),
+        ctx.accounts.payer.clone().key,
+        &ctx.accounts.user.authority,
+        &id(),
+    )?;
 
     // Check if game is active
     if !ctx.accounts.game.is_game_active() {
@@ -69,8 +84,6 @@ fn move_player(game: &mut Account<Game>, player_index: usize, direction: Facing,
                 y = final_y;
             },
         };
-
-        msg!(&format!("Try moving to {x}, {y}"));
 
         // Check if movement is valid
         if game.is_cell_valid(x as usize, y as usize) {
