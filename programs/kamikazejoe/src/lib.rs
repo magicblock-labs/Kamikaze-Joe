@@ -94,7 +94,7 @@ pub struct JoinGame<'info> {
     pub player: Signer<'info>,
     #[account(mut, address=User::pda(player.key()).0)]
     pub user: Account<'info, User>,
-    #[account(mut, address=Game::pda(User::pda(game.owner.key()).0, &game.id.to_be_bytes()).0)]
+    #[account(mut, address=Game::pda(User::pda(game.owner).0, &game.id.to_be_bytes()).0)]
     pub game: Account<'info, Game>,
     #[account(mut, address=Vault::pda().0)]
     pub vault: Account<'info, Vault>,
@@ -107,9 +107,9 @@ pub struct MakeMove<'info> {
     pub payer: Signer<'info>,
     #[account(mut, owner=crate::id())]
     pub user: Account<'info, User>,
-    #[account(mut, address=Game::pda(User::pda(game.owner.key()).0, &game.id.to_be_bytes()).0)]
+    #[account(mut, address=Game::pda(User::pda(game.owner).0, &game.id.to_be_bytes()).0)]
     pub game: Account<'info, Game>,
-    #[session(signer = payer, authority = user.authority.key())]
+    #[session(signer = payer, authority = user.authority)]
     pub session_token: Option<Account<'info, SessionToken>>,
 }
 
@@ -119,19 +119,21 @@ pub struct Explode<'info> {
     pub payer: Signer<'info>,
     #[account(mut, owner=crate::id())]
     pub user: Account<'info, User>,
-    #[account(mut, address=Game::pda(User::pda(game.owner.key()).0, &game.id.to_be_bytes()).0)]
+    #[account(mut, address=Game::pda(User::pda(game.owner).0, &game.id.to_be_bytes()).0)]
     pub game: Account<'info, Game>,
-    #[session(signer = payer, authority = user.authority.key())]
+    #[session(signer = payer, authority = user.authority)]
     pub session_token: Option<Account<'info, SessionToken>>,
 }
 
 #[derive(Accounts)]
 pub struct ClaimPrize<'info> {
     #[account(mut)]
-    pub player: Signer<'info>,
-    #[account(mut, address=User::pda(player.key()).0)]
+    pub payer: Signer<'info>,
+    #[account(mut)]
+    pub receiver: Option<AccountInfo<'info>>,
+    #[account(mut, address=User::pda(payer.key()).0)]
     pub user: Account<'info, User>,
-    #[account(mut, address=Game::pda(User::pda(game.owner.key()).0, &game.id.to_be_bytes()).0)]
+    #[account(mut, address=Game::pda(User::pda(game.owner).0, &game.id.to_be_bytes()).0)]
     pub game: Account<'info, Game>,
     #[account(mut, address=Vault::pda().0)]
     pub vault: Account<'info, Vault>,

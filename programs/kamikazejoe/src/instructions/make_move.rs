@@ -85,8 +85,6 @@ fn move_player(game: &mut Account<Game>, player_index: usize, direction: Facing,
             },
         };
 
-        msg!(&format!("Try moving to {x}, {y}"));
-
         // Check if movement is valid
         if game.is_cell_valid(x as usize, y as usize) {
             final_x = x;

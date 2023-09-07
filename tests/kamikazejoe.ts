@@ -391,9 +391,10 @@ describe("kamikaze_joe", () => {
         tx = await program.methods
             .claimPrize()
             .accounts({
-                player: player.publicKey,
+                payer: player.publicKey,
                 user: userPda,
                 game: gamePda,
+                receiver: null,
                 vault: FindVaultPda(program),
             })
             .signers([player]).rpc()
