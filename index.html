@@ -7,7 +7,7 @@
     <link rel="shortcut icon" href="TemplateData/favicon.ico">
     <link rel="stylesheet" href="TemplateData/style.css">
   </head>
-  <body class="bg">
+  <body>
     <div id="unity-container" class="unity-desktop">
       <canvas id="unity-canvas" width=960 height=600></canvas>
       <div id="unity-loading-bar">
@@ -56,11 +56,11 @@
       }
 
       var buildUrl = "Build";
-      var loaderUrl = buildUrl + "/Kamikaze Joe.loader.js";
+      var loaderUrl = buildUrl + "/Kamikaze Joe V2.loader.js";
       var config = {
-        dataUrl: buildUrl + "/Kamikaze Joe.data",
-        frameworkUrl: buildUrl + "/Kamikaze Joe.framework.js",
-        codeUrl: buildUrl + "/Kamikaze Joe.wasm",
+        dataUrl: buildUrl + "/Kamikaze Joe V2.data",
+        frameworkUrl: buildUrl + "/Kamikaze Joe V2.framework.js",
+        codeUrl: buildUrl + "/Kamikaze Joe V2.wasm",
         streamingAssetsUrl: "StreamingAssets",
         companyName: "Magicblock",
         productName: "Kamikaze Joe",
@@ -97,7 +97,7 @@
         canvas.style.height = "600px";
       }
 
-      canvas.style.background = "url('" + buildUrl + "/Kamikaze Joe.jpg') center / cover";
+      canvas.style.background = "url('" + buildUrl + "/Kamikaze Joe V2.jpg') center / cover";
       loadingBar.style.display = "block";
 
       var script = document.createElement("script");
