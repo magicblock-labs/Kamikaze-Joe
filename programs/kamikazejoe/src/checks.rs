@@ -1,7 +1,7 @@
 use anchor_lang::prelude::Account;
 use anchor_lang::{Key, Result};
 use anchor_lang::prelude::SolanaSysvar;
-use gpl_session::{SessionError, SessionToken};
+use session_keys::{SessionError, SessionToken};
 use solana_program::clock::Clock;
 use solana_program::entrypoint::ProgramResult;
 use solana_program::msg;
@@ -49,7 +49,7 @@ pub fn check_session_token(
         ];
 
         // Check if the derived address matches the session token's address
-        let (pda, _) = Pubkey::find_program_address(seeds, &gpl_session::id());
+        let (pda, _) = Pubkey::find_program_address(seeds, &session_keys::id());
         if pda != session_token.key() {
             return Err(SessionError::InvalidToken.into());
         }

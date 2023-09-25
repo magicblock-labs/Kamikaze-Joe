@@ -185,10 +185,10 @@
   resolved "https://registry.yarnpkg.com/@graphql-typed-document-node/core/-/core-3.2.0.tgz#5f3d96ec6b2354ad6d8a28bf216a1d97b5426861"
   integrity sha512-mB9oAsNCm9aM3/SOv4YtBMqZbYj10R7dkq8byBqxGY/ncFwhf2oQzMV+LCRlWoDSEBJ3COiR1yeDvMtsoOsuFQ==
 
-"@gumhq/sdk@^3.0.1":
-  version "3.0.1"
-  resolved "https://registry.yarnpkg.com/@gumhq/sdk/-/sdk-3.0.1.tgz#b3b9ee91dab8d48387f1878c8efd00b287f271a6"
-  integrity sha512-sgUsLkb/22U3WL0rNNdytjt2P33g2FwUsUW2XHHGnU+mX/jeSnMhs3z/lafzY9vdsCcnyyKrLm3unIOTBwbLkg==
+"@magicblock-labs/gum-sdk@^3.0.2":
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/@magicblock-labs/gum-sdk/-/gum-sdk-3.0.2.tgz#5690fe2040b6b4edb38e81e0bf935e79045a5b6b"
+  integrity sha512-333hyLK2TYjvmkfsxoe7IerOGBfgjqg5aO5R9EVDgn8eGPlPl6kMbdzSqBjseYy84ERektXt/JpUZ1I38ffDEw==
   dependencies:
     "@project-serum/anchor" "^0.26.0"
     axios "^1.2.6"

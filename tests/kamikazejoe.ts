@@ -2,7 +2,7 @@ import { PublicKey } from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
 import {AnchorProvider, Program, web3} from "@coral-xyz/anchor";
 import {KamikazeJoe} from "../target/types/kamikaze_joe";
-import { SessionTokenManager } from "@gumhq/sdk";
+import { SessionTokenManager } from "@magicblock-labs/gum-sdk";
 import BN from "bn.js";
 import {expect} from "chai";
 
@@ -30,16 +30,16 @@ async function InitializeUser(program: Program<KamikazeJoe>, player: anchor.web3
     return tx;
 }
 
-async function Initialize(program: Program<KamikazeJoe>, player: anchor.web3.Keypair, matchesPda: PublicKey) {
+async function Initialize(program: Program<KamikazeJoe>, player: anchor.web3.Keypair) {
     let tx = await program.methods
         .initialize()
         .accounts({
             payer: player.publicKey,
-            matches: matchesPda,
+            matches: FindMatchesPda(program),
             vault: FindVaultPda(program),
             systemProgram: anchor.web3.SystemProgram.programId,
         })
-        .signers([player]).rpc()
+        .signers([player]).rpc({skipPreflight: true})
     return tx;
 }
 
@@ -116,6 +116,28 @@ describe("kamikaze_joe", () => {
         "localnet"
     );
 
+    it("Initialize Accounts!", async () => {
+
+        // First generate the account to initialize the game
+        const provider = anchor.AnchorProvider.env();
+        let player = await new_funded_address(provider);
+
+        let vaultPda = FindVaultPda(program);
+
+        // Initialize if needed
+        console.log("\nVaultPda", FindVaultPda(program).toBase58(), "\n");
+
+        if(await provider.connection.getAccountInfo(vaultPda) == null) {
+            console.log("Initializing...");
+            let tx = await Initialize(program, player);
+            await provider.connection.confirmTransaction(tx, "confirmed");
+            console.log("Initialize signature", tx);
+        }else{
+            console.log("Already initialized");
+        }
+
+    });
+
     it("Create User!", async () => {
 
         // First generate the account to initialize the game
@@ -129,25 +151,6 @@ describe("kamikaze_joe", () => {
         await provider.connection.confirmTransaction(tx, "confirmed");
 
         console.log("Create User signature", tx);
-    });
-
-    it("Create Matches!", async () => {
-
-        // First generate the account to initialize the game
-        const provider = anchor.AnchorProvider.env();
-        let player = await new_funded_address(provider);
-
-        let matchesPda = FindMatchesPda(program);
-
-        // Initialize if needed
-        if(await provider.connection.getAccountInfo(matchesPda) == null) {
-            let tx = await Initialize(program, player, matchesPda);
-            await provider.connection.confirmTransaction(tx, "confirmed");
-            console.log("Initialize signature", tx);
-        }else{
-            console.log("Already initialized");
-        }
-
     });
 
     it("Create Game!", async () => {

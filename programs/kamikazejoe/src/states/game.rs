@@ -103,6 +103,13 @@ impl Game {
             && self.ticket_price > 0;
     }
 
+    pub fn get_winner(&self) -> Pubkey {
+        if let GameState::Won { winner } = self.game_state {
+            return winner;
+        }
+        return Pubkey::default();
+    }
+
     pub fn get_player_index(&self, player_key: Pubkey) -> Result<usize> {
         let mut player_index = 0;
         let mut player_found = false;
