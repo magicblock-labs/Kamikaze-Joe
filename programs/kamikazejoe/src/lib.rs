@@ -12,6 +12,16 @@ mod checks;
 use instructions::*;
 pub use states::*;
 
+#[cfg(not(feature = "no-entrypoint"))]
+solana_security_txt::security_txt! {
+    name: "KamikazeJoe",
+    project_url: "https://magicblock.gg",
+    contacts: "email:dev@magicblock.gg,twitter:@magicblock",
+    policy: "",
+    preferred_languages: "en",
+    source_code: "https://github.com/magicblock-labs/Kamikaze-Joe"
+}
+
 #[program]
 pub mod kamikaze_joe {
     use super::*;
@@ -47,6 +57,19 @@ pub mod kamikaze_joe {
     pub fn claim_prize(ctx: Context<ClaimPrize>) -> Result<()> {
         claim_prize::handler(ctx)
     }
+
+    pub fn claim_prize_soar(ctx: Context<ClaimPrizeSoar>) -> Result<()> {
+        claim_prize_soar::handler(ctx)
+    }
+
+    pub fn initialize_leaderboard(ctx: Context<InitializeLeaderboard>,
+                                  game: Pubkey,
+                                  leaderboard: Pubkey,
+                                  top_entries: Pubkey
+    ) -> Result<()> {
+        initialize_leaderboard::handler(ctx, game, leaderboard, top_entries)
+    }
+
 }
 
 #[derive(Accounts)]
@@ -137,5 +160,53 @@ pub struct ClaimPrize<'info> {
     pub game: Account<'info, Game>,
     #[account(mut, address=Vault::pda().0)]
     pub vault: Account<'info, Vault>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct InitializeLeaderboard<'info> {
+    #[account(mut)]
+    pub payer: Signer<'info>,
+    #[account(init, payer=payer, space = Leaderboard::size(), seeds = [seeds::LEADERBOARD], bump)]
+    pub leaderboard: Account<'info, Leaderboard>,
+    pub system_program: Program<'info, System>,
+}
+
+
+#[derive(Accounts)]
+pub struct ClaimPrizeSoar<'info> {
+    #[account(mut)]
+    pub payer: Signer<'info>,
+    #[account(mut)]
+    pub receiver: Option<AccountInfo<'info>>,
+    #[account(mut, address=User::pda(game.get_winner()).0)]
+    pub user: Account<'info, User>,
+    #[account(mut, address=Game::pda(User::pda(game.owner).0, &game.id.to_be_bytes()).0)]
+    pub game: Account<'info, Game>,
+    #[account(mut, address=Vault::pda().0)]
+    pub vault: Account<'info, Vault>,
+    /// CHECK: The SOAR game account for this program.
+    #[account(
+        mut,
+        seeds = [seeds::LEADERBOARD], bump,
+        constraint = leaderboard_info.leaderboard == soar_leaderboard.key(),
+        constraint = leaderboard_info.top_entries == soar_top_entries.key(),
+    )]
+    pub leaderboard_info: Account<'info, Leaderboard>,
+    /// CHECK: The SOAR game for this program.
+    pub soar_game: UncheckedAccount<'info>,
+    /// CHECK: The SOAR leaderboard for this program.
+    pub soar_leaderboard: UncheckedAccount<'info>,
+    /// CHECK: The SOAR player account for this user.
+    pub soar_player_account: UncheckedAccount<'info>,
+    #[account(mut)]
+    /// CHECK: The SOAR player scores account for this user.
+    pub soar_player_scores: UncheckedAccount<'info>,
+    #[account(mut)]
+    /// CHECK: The SOAR top entries account for this leaderboard.
+    pub soar_top_entries: UncheckedAccount<'info>,
+    /// CHECK: The SOAR program ID.
+    #[account(address = soar_cpi::ID)]
+    pub soar_program: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
 }

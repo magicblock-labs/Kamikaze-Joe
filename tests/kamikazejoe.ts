@@ -6,7 +6,7 @@ import { SessionTokenManager } from "@magicblock-labs/gum-sdk";
 import BN from "bn.js";
 import {expect} from "chai";
 
-async function new_funded_address(provider: AnchorProvider) {
+export async function new_funded_address(provider: AnchorProvider) {
     let player = anchor.web3.Keypair.generate();//provider.wallet;
 
     const airdrop = await provider.connection.requestAirdrop(
@@ -18,7 +18,7 @@ async function new_funded_address(provider: AnchorProvider) {
     return player;
 }
 
-async function InitializeUser(program: Program<KamikazeJoe>, player: anchor.web3.Keypair, userPda: PublicKey) {
+export async function InitializeUser(program: Program<KamikazeJoe>, player: anchor.web3.Keypair, userPda: PublicKey) {
     let tx = await program.methods
         .initializeUser()
         .accounts({
@@ -43,7 +43,7 @@ async function Initialize(program: Program<KamikazeJoe>, player: anchor.web3.Key
     return tx;
 }
 
-async function InitializeGame(program: Program<KamikazeJoe>, player: anchor.web3.Keypair, userPda: PublicKey, gamePda: PublicKey) {
+export async function InitializeGame(program: Program<KamikazeJoe>, player: anchor.web3.Keypair, userPda: PublicKey, gamePda: PublicKey) {
     return await program.methods
         .initializeGame(50, 50, 0, null)
         .accounts({
@@ -56,7 +56,7 @@ async function InitializeGame(program: Program<KamikazeJoe>, player: anchor.web3
         .signers([player]).rpc()
 }
 
-async function JoinGame(program: Program<KamikazeJoe>, player2: anchor.web3.Keypair, user2Pda: PublicKey, gamePda: PublicKey, x= 0, y = 0) {
+export async function JoinGame(program: Program<KamikazeJoe>, player2: anchor.web3.Keypair, user2Pda: PublicKey, gamePda: PublicKey, x= 0, y = 0) {
     return await program.methods
         .joinGame(x, y)
         .accounts({
@@ -68,7 +68,7 @@ async function JoinGame(program: Program<KamikazeJoe>, player2: anchor.web3.Keyp
         .signers([player2]).rpc()
 }
 
-function FindGamePda(userPda: PublicKey, id: BN, program: Program<KamikazeJoe>) {
+export function FindGamePda(userPda: PublicKey, id: BN, program: Program<KamikazeJoe>) {
     let gamePda = PublicKey.findProgramAddressSync(
         [Buffer.from("game"), userPda.toBuffer(), id.toBuffer("le", 4)],
         program.programId
@@ -76,7 +76,7 @@ function FindGamePda(userPda: PublicKey, id: BN, program: Program<KamikazeJoe>) 
     return gamePda;
 }
 
-function FindUserPda(player: PublicKey, program: Program<KamikazeJoe>) {
+export function FindUserPda(player: PublicKey, program: Program<KamikazeJoe>) {
     let userPda = PublicKey.findProgramAddressSync(
         [Buffer.from("user-pda"), player.toBuffer()],
         program.programId
@@ -92,7 +92,7 @@ function FindMatchesPda(program: Program<KamikazeJoe>) {
     return matchesPda;
 }
 
-function FindVaultPda(program: Program<KamikazeJoe>) {
+export function FindVaultPda(program: Program<KamikazeJoe>) {
     let vaultPda = PublicKey.findProgramAddressSync(
         [Buffer.from("vault")],
         program.programId
