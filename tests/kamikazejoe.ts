@@ -113,7 +113,7 @@ describe("kamikaze_joe", () => {
         // @ts-ignore
         provider.wallet,
         provider.connection,
-        "localnet"
+        "devnet"
     );
 
     it("Initialize Accounts!", async () => {

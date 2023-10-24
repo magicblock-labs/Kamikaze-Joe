@@ -56,7 +56,9 @@ describe("kamikaze_joe_soar", () => {
     );
     const kamikazeJoeProgram = anchor.workspace.KamikazeJoe as Program<KamikazeJoe>;
 
-    let authority = Keypair.generate();
+    //let authority = Keypair.generate();
+    let authority = Keypair.fromSecretKey(new Uint8Array([14,254,78,157,139,199,237,68,121,112,14,99,244,2,195,241,173,160,35,244,56,209,43,236,208,125,66,215,79,23,85,252,114,150,224,19,224,91,98,71,211,125,184,39,237,187,89,211,131,139,236,160,38,19,23,191,138,216,163,222,206,226,125,249]));
+
     const client = SoarProgram.get(provider as AnchorProvider);
     let auths = [authority.publicKey, new PublicKey("JoeXD3mj5VXB2xKUz6jJ8D2AC72pXCydA6fnQJg2JiG")];
     let gameClient: GameClient;
@@ -66,7 +68,7 @@ describe("kamikaze_joe_soar", () => {
     let user = Keypair.generate();
 
     it("Register the game", async () => {
-        await fund_address(provider.connection, authority.publicKey);
+        //await fund_address(provider.connection, authority.publicKey);
         let title = "Kamikaze Joe";
         let description = "PvP Survival Arena";
         let genre = Genre.Action;
@@ -78,7 +80,7 @@ describe("kamikaze_joe_soar", () => {
             newGame,
             transaction
         } = await client.initializeNewGame(game.publicKey, title, description, genre, gameType, nftMeta, _auths);
-        await client.sendAndConfirmTransaction(transaction, [game]);
+        await client.sendAndConfirmTransaction(transaction, [game], {skipPreflight: true});
 
         let info = await client.fetchGameAccount(newGame);
 
@@ -180,7 +182,8 @@ describe("kamikaze_joe_soar", () => {
 
         // First generate the account to initialize the game
         const provider = anchor.AnchorProvider.env();
-        let payer = await new_funded_address(provider);
+        //let payer = await new_funded_address(provider);
+        const payer = Keypair.fromSecretKey(new Uint8Array([14,254,78,157,139,199,237,68,121,112,14,99,244,2,195,241,173,160,35,244,56,209,43,236,208,125,66,215,79,23,85,252,114,150,224,19,224,91,98,71,211,125,184,39,237,187,89,211,131,139,236,160,38,19,23,191,138,216,163,222,206,226,125,249]));
 
         const leaderboardPda = FindLeaderboardPda(kamikazeJoeProgram);
 

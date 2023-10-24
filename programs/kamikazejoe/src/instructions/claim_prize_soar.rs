@@ -39,35 +39,37 @@ pub fn handler(ctx: Context<ClaimPrizeSoar>) -> Result<()> {
     game.prize_claimed = true;
     ctx.accounts.user.won += 1;
 
-    // Submit to the leaderboard
-    if receiver_account.unsigned_key() == ctx.accounts.payer.key {
-        msg!("Submitting the score!");
+    // Submit to the Soar leaderboard
+    msg!("Submitting the score to Soar!");
 
-        let accounts = SubmitScore {
-            payer: ctx.accounts.payer.to_account_info(),
-            authority: ctx.accounts.leaderboard_info.to_account_info(),
-            player_account: ctx.accounts.soar_player_account.to_account_info(),
-            game: ctx.accounts.soar_game.to_account_info(),
-            leaderboard: ctx.accounts.soar_leaderboard.to_account_info(),
-            player_scores: ctx.accounts.soar_player_scores.to_account_info(),
-            top_entries: ctx.accounts.soar_top_entries.to_account_info(),
-            system_program: ctx.accounts.system_program.to_account_info(),
-        };
+    msg!("Receiver account: {}, Payer: {}", receiver_account.key().to_string(), ctx.accounts.payer.key.to_string());
 
-        let state_bump = *ctx.bumps.get("leaderboard_info").unwrap();
-        let seeds = &[LEADERBOARD, &[state_bump]];
-        let signer = &[&seeds[..]];
+    let accounts = SubmitScore {
+        payer: ctx.accounts.payer.to_account_info(),
+        authority: ctx.accounts.leaderboard_info.to_account_info(),
+        player_account: ctx.accounts.soar_player_account.to_account_info(),
+        game: ctx.accounts.soar_game.to_account_info(),
+        leaderboard: ctx.accounts.soar_leaderboard.to_account_info(),
+        player_scores: ctx.accounts.soar_player_scores.to_account_info(),
+        top_entries: ctx.accounts.soar_top_entries.to_account_info(),
+        system_program: ctx.accounts.system_program.to_account_info(),
+    };
 
-        let cpi_ctx = CpiContext::new(
-            ctx.accounts.soar_program.to_account_info(), accounts)
-            .with_signer(signer);
-        cpi::submit_score(cpi_ctx,ctx.accounts.user.won as u64)?;
+    let state_bump = *ctx.bumps.get("leaderboard_info").unwrap();
+    let seeds = &[LEADERBOARD, &[state_bump]];
+    let signer = &[&seeds[..]];
 
-        msg!("Submitting score {} for user.", ctx.accounts.user.won);
-    }
+    let cpi_ctx = CpiContext::new(
+        ctx.accounts.soar_program.to_account_info(), accounts)
+        .with_signer(signer);
+    cpi::submit_score(cpi_ctx,ctx.accounts.user.won as u64)?;
+
+    msg!("Submitting score {} for user.", ctx.accounts.user.won);
 
     // Calculate the reward (90% of the price pool, 10% is kept in the vault)
     let payout = ((game.ticket_price * game.players.len() as u64) * 9) / 10 ;
+
+    msg!("Paying out {} lamports to {}", payout, receiver_account.key().to_string());
 
     // Transfer price to the winner
     let vault_lamports = ctx.accounts.vault.to_account_info().lamports().checked_sub(payout);
