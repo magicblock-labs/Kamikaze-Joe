@@ -55,7 +55,7 @@ pub fn handler(ctx: Context<ClaimPrizeSoar>) -> Result<()> {
         system_program: ctx.accounts.system_program.to_account_info(),
     };
 
-    let state_bump = *ctx.bumps.get("leaderboard_info").unwrap();
+    let state_bump = ctx.bumps.leaderboard_info;
     let seeds = &[LEADERBOARD, &[state_bump]];
     let signer = &[&seeds[..]];
 
