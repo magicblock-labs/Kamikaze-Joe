@@ -1907,9 +1907,9 @@ checksum = "942b4a808e05215192e39f4ab80813e599068285906cc91aa64f923db842bd5a"
 
 [[package]]
 name = "soar-cpi"
-version = "0.1.3"
+version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "550ff810fb677655a7e50809cf60874674db1567e30c1d5d379c07f6331785d6"
+checksum = "41202729313ebb95f9e23218fe97f5323f5c3ac22af69ff80a8474c4db91812c"
 dependencies = [
  "anchor-lang",
  "clockwork-anchor-gen",

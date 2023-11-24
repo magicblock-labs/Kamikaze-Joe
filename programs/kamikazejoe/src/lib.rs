@@ -70,6 +70,10 @@ pub mod kamikaze_joe {
         initialize_leaderboard::handler(ctx, game, leaderboard, top_entries)
     }
 
+    pub fn close_leaderboard(_ctx: Context<CloseLeaderboard>) -> Result<()>  {
+        Ok(())
+    }
+
 }
 
 #[derive(Accounts)]
@@ -208,5 +212,14 @@ pub struct ClaimPrizeSoar<'info> {
     /// CHECK: The SOAR program ID.
     #[account(address = soar_cpi::ID)]
     pub soar_program: UncheckedAccount<'info>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct CloseLeaderboard<'info> {
+    #[account(mut)]
+    pub payer: Signer<'info>,
+    #[account(mut, close = payer)]
+    pub leaderboard: Account<'info, Leaderboard>,
     pub system_program: Program<'info, System>,
 }

@@ -23,5 +23,5 @@ address="KeyspM2ssCJbqUhQ4k7sveSiY4WjnYsrXkC8oDbwde5"
 program="test-programs/session_keys.so"
 
 [[test.genesis]]
-address="SoarmxsvnGcQzLGaiue8mVTko7uuEfTY5zwdKKCnQDU"
+address="SoarNNzwQHMwcfdkdLc6kvbkoMSxcHy89gTHrjhJYkk"
 program="test-programs/soar.so"

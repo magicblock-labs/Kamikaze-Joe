@@ -14,7 +14,9 @@ import {
     JoinGame,
     new_funded_address
 } from "./kamikazejoe";
+import * as fs from "fs";
 
+const keypairPath = "~/.config/solana/id.json";
 
 async function fund_address(connection: anchor.web3.Connection, account: PublicKey) {
     const airdrop = await connection.requestAirdrop(
@@ -28,10 +30,21 @@ async function fund_address(connection: anchor.web3.Connection, account: PublicK
 
 export function FindLeaderboardPda(program: Program<KamikazeJoe>) {
     let leaderboardPda = PublicKey.findProgramAddressSync(
-        [Buffer.from("soar")],
+        [Buffer.from("soar-leaderboard")],
         program.programId
     )[0];
     return leaderboardPda;
+}
+
+export function loadWalletKey(keypair: string): Keypair {
+    if (!keypair || keypair == '') {
+        throw new Error('Keypair is required!');
+    }
+    keypair = keypair.replace("~", process.env.HOME);
+    const loaded = Keypair.fromSecretKey(
+        new Uint8Array(JSON.parse(fs.readFileSync(keypair).toString())),
+    );
+    return loaded;
 }
 
 async function InitializeLeaderboard(program: Program<KamikazeJoe>, payer: anchor.web3.Keypair, game: PublicKey, leaderboard: PublicKey, topEntries: PublicKey) {
@@ -51,13 +64,12 @@ describe("kamikaze_joe_soar", () => {
     anchor.setProvider(anchor.AnchorProvider.env());
     const provider = anchor.getProvider();
 
-    const kamikazeJoeProgramId = new PublicKey(
-        "JoeXD3mj5VXB2xKUz6jJ8D2AC72pXCydA6fnQJg2JiG"
-    );
     const kamikazeJoeProgram = anchor.workspace.KamikazeJoe as Program<KamikazeJoe>;
 
     //let authority = Keypair.generate();
-    let authority = Keypair.fromSecretKey(new Uint8Array([14,254,78,157,139,199,237,68,121,112,14,99,244,2,195,241,173,160,35,244,56,209,43,236,208,125,66,215,79,23,85,252,114,150,224,19,224,91,98,71,211,125,184,39,237,187,89,211,131,139,236,160,38,19,23,191,138,216,163,222,206,226,125,249]));
+    // Read from private key from file
+    //let authority = Keypair.fromSecretKey(new Uint8Array([]));
+    let authority = loadWalletKey(keypairPath);
 
     const client = SoarProgram.get(provider as AnchorProvider);
     let auths = [authority.publicKey, new PublicKey("JoeXD3mj5VXB2xKUz6jJ8D2AC72pXCydA6fnQJg2JiG")];
@@ -99,7 +111,7 @@ describe("kamikaze_joe_soar", () => {
     });
 
     it("Create the leaderboard", async () => {
-        let expectedDescription = "Kamnikaze Joe Leaderboard";
+        let expectedDescription = "Kamikaze Joe Leaderboard";
         let expectedNftMeta = PublicKey.default;
         let scoresToRetain = 5;
         let scoresOrder = false; //descending order
@@ -148,42 +160,12 @@ describe("kamikaze_joe_soar", () => {
         expect(gameClient.account.leaderboardCount.toNumber()).to.equal(1);
     });
 
-    it("Register player/leaderboard", async () => {
-        // Derive the soarStatePDA of the `tens` program.
-        let soarPDA = PublicKey.findProgramAddressSync(
-            [Buffer.from("soar")],
-            kamikazeJoeProgram.programId
-        )[0];
-
-        // Make the leaderboard info PDA an authority of the game so it can permissionlessly
-        // sign CPI requests to SOAR that require the authority's signature.
-        let newAuths = auths.concat([soarPDA]);
-        auths = newAuths;
-
-        let { transaction: update } = await gameClient.program.updateGameAccount(
-            game.publicKey,
-            authority.publicKey,
-            undefined,
-            newAuths
-        );
-        await client.sendAndConfirmTransaction(update, [authority]);
-
-        // Initialize a SOAR player account, required for interacting with the `KamikazeJoe` game.
-        let { transaction: initPlayer } = await gameClient.program.initializePlayerAccount(
-            user.publicKey,
-            "player1",
-            PublicKey.default
-        );
-        const txp = await client.sendAndConfirmTransaction(initPlayer, [user]);
-        console.log(`Initialize player account: ${txp}\n`);
-    });
-
     it("Register the leaderboard info into Kamikaze Joe", async () => {
 
         // First generate the account to initialize the game
         const provider = anchor.AnchorProvider.env();
         //let payer = await new_funded_address(provider);
-        const payer = Keypair.fromSecretKey(new Uint8Array([14,254,78,157,139,199,237,68,121,112,14,99,244,2,195,241,173,160,35,244,56,209,43,236,208,125,66,215,79,23,85,252,114,150,224,19,224,91,98,71,211,125,184,39,237,187,89,211,131,139,236,160,38,19,23,191,138,216,163,222,206,226,125,249]));
+        let payer = loadWalletKey(keypairPath);
 
         const leaderboardPda = FindLeaderboardPda(kamikazeJoeProgram);
 
@@ -199,6 +181,37 @@ describe("kamikaze_joe_soar", () => {
         }else{
             console.log("Already initialized: ", leaderboardPda.toString());
         }
+    });
+
+    it("Register player/leaderboard", async () => {
+        // Derive the soarStatePDA of the `tens` program.
+        let soarPDA = FindLeaderboardPda(kamikazeJoeProgram);
+        let wallet = (kamikazeJoeProgram.provider as anchor.AnchorProvider).wallet.publicKey
+
+        console.log("Leaderboard PDA", soarPDA.toBase58());
+
+        // Make the leaderboard info PDA an authority of the game so it can permissionlessly
+        // sign CPI requests to SOAR that require the authority's signature.
+        let newAuths = auths.concat([soarPDA, wallet]);
+        auths = newAuths;
+
+        let { transaction: update } = await gameClient.program.updateGameAccount(
+            game.publicKey,
+            authority.publicKey,
+            undefined,
+            newAuths
+        );
+        let updateTx = await client.sendAndConfirmTransaction(update, [authority], {skipPreflight: true});
+        console.log(`Update game account: ${updateTx}\n`);
+
+        // Initialize a SOAR player account, required for interacting with the `KamikazeJoe` game.
+        let { transaction: initPlayer } = await gameClient.program.initializePlayerAccount(
+            user.publicKey,
+            "player1",
+            PublicKey.default
+        );
+        const txp = await client.sendAndConfirmTransaction(initPlayer, [user]);
+        console.log(`Initialize player account: ${txp}\n`);
     });
 
     it("Register the player to the leaderboard, if not already", async () => {
@@ -317,5 +330,21 @@ describe("kamikaze_joe_soar", () => {
         await provider.connection.confirmTransaction(tx, "confirmed");
         return {userPda, gamePda};
     }
+
+    it("Close the leaderboard PDA", async () => {
+
+        let kamikazeJoeProgram = anchor.workspace.KamikazeJoe as Program<KamikazeJoe>;
+        let soarPDA = FindLeaderboardPda(kamikazeJoeProgram);
+
+        let tx = await kamikazeJoeProgram
+            .methods
+            .closeLeaderboard()
+            .accounts({
+                payer: authority.publicKey,
+                leaderboard: soarPDA,
+                systemProgram: anchor.web3.SystemProgram.programId,
+            }).signers([authority]).rpc();
+        console.log("Close leaderboard signature", tx);
+    });
 
 });

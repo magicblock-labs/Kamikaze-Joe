@@ -7,8 +7,8 @@
         "@coral-xyz/anchor": "^0.27.0"
     },
     "devDependencies": {
-        "@magicblock-labs/gum-sdk": "^3.0.2",
-        "@magicblock-labs/soar-sdk": "^0.1.18",
+        "@magicblock-labs/gum-sdk": "^3.0.5",
+        "@magicblock-labs/soar-sdk": "^0.1.20",
         "@types/bn.js": "^5.1.0",
         "@types/chai": "^4.3.0",
         "@types/mocha": "^9.0.0",
